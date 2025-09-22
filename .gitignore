@@ -1,0 +1,24 @@
+# Folder for the backend of the project.
+backend/
+
+# Node.js dependencies
+# These are local dependencies and should not be committed to Git.
+node_modules/
+
+# Common log files created by npm/yarn
+npm-debug.log*
+yarn-debug.log*
+
+# Environment variables
+# These files often contain sensitive information like API keys and passwords.
+.env
+.env.*
+
+# Build and temporary files
+# Files and directories generated during the build process or by the OS.
+dist/
+build/
+.cache/
+.vscode/
+.idea/
+.DS_Store
