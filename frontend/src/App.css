@@ -36,3 +36,33 @@
     transform: rotate(360deg);
   }
 }
+
+/* Style for the tab links */
+.tabs-styled .nav-link {
+  color: #666; /* Default text color for inactive tabs */
+  border: 1px solid #dee2e6; /* Border color */
+  border-bottom: none; /* Remove bottom border for better visual effect */
+  border-radius: 8px 8px 0 0; /* Rounded top corners */
+  padding: 12px 20px;
+  background-color: #f8f9fa; /* Light gray background */
+  transition: all 0.3s ease;
+}
+
+/* Style for the active tab */
+.tabs-styled .nav-link.active {
+  color: #2179f5; /* Primary blue text color */
+  background-color: #fff; /* White background for the active tab */
+  border-color: #dee2e6;
+  border-bottom: 1px solid #fff; /* A white border to overlap the tab content border */
+  font-weight: 600; /* Bolder font for emphasis */
+}
+
+/* Hover effect for tabs */
+.tabs-styled .nav-link:hover {
+  border-color: #adb5bd;
+}
+
+/* Adjust the bottom border of the tab container to look cleaner */
+.tabs-styled .nav-tabs {
+    border-bottom: 1px solid #dee2e6;
+}

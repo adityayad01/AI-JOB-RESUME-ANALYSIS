@@ -1,16 +1,63 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
-import { Tab, Tabs, Card, Row, Col, Badge, Table, Button } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Tab, Tabs, Card, Row, Col, Badge, Table, Button, Spinner, Alert } from "react-bootstrap";
 import { FaBriefcase, FaMapMarkerAlt, FaGraduationCap, FaEnvelope, FaPhone, FaLinkedin } from "react-icons/fa";
+import axios from "axios";
+import { API_URL } from "../../utils/constants";
+import { toast } from "react-toastify";
 
 const Jobs = () => {
-  const location = useLocation();
-  const jobRecommendations = location.state?.jobRecommendations || [];
-  const analysis = location.state?.analysis || null;
+  const [jobRecommendations, setJobRecommendations] = useState([]);
+  const [analysis, setAnalysis] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchResumeData = async () => {
+      try {
+        // Fetch both recommendations and analysis simultaneously
+        const [recommendationsRes, analysisRes] = await Promise.all([
+          axios.get(`${API_URL}/api/resume/recommendations`, { withCredentials: true }),
+          axios.get(`${API_URL}/api/resume/analysis`, { withCredentials: true }),
+        ]);
+
+        setJobRecommendations(recommendationsRes.data || []);
+        setAnalysis(analysisRes.data || null);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch resume data:", err);
+        // Display a user-friendly error message
+        setError("Failed to load resume data. Please try uploading again.");
+        toast.error("Failed to load resume data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResumeData();
+  }, []); // The empty dependency array ensures this effect runs only once when the component mounts
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "90vh" }}>
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+        <p className="ms-3">Fetching resume data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container my-5">
+        <Alert variant="danger" className="text-center">{error}</Alert>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-5">
-      <Tabs defaultActiveKey="analysis" id="resume-tabs" className="mb-4" fill>
+    <div className="container my-5">
+      <Tabs defaultActiveKey="analysis" id="resume-tabs" className="mb-4 d-flex justify-content-center tabs-styled" fill>
         {/* ------------------------- */}
         {/* View Analysis Tab */}
         {/* ------------------------- */}
@@ -19,22 +66,24 @@ const Jobs = () => {
             <h5 className="text-center mt-4">No analysis available.</h5>
           ) : (
             <div className="mt-4">
-              <h4 className="mb-3">📄 Extracted Data</h4>
-
+              <h4 className="mb-3" style={{ fontWeight: "600", color: "#333" }}>📄 Extracted Data</h4>
+              
               {/* Contact */}
               {analysis.contact && (
-                <Card className="mb-3 shadow-sm">
-                  <Card.Header>Contact Information</Card.Header>
+                <Card className="mb-4 shadow-lg border-0 rounded-4">
+                  <Card.Header style={{ backgroundColor: "#e3f2fd", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", fontWeight: "bold" }}>
+                    Contact Information
+                  </Card.Header>
                   <Card.Body>
                     {analysis.contact.email && (
-                      <p><FaEnvelope className="me-2" /> Email: {analysis.contact.email}</p>
+                      <p className="mb-1"><FaEnvelope className="me-2 text-primary" /> Email: {analysis.contact.email}</p>
                     )}
                     {analysis.contact.phone && (
-                      <p><FaPhone className="me-2" /> Phone: {analysis.contact.phone}</p>
+                      <p className="mb-1"><FaPhone className="me-2 text-primary" /> Phone: {analysis.contact.phone}</p>
                     )}
                     {analysis.contact.linkedin && (
-                      <p>
-                        <FaLinkedin className="me-2" /> LinkedIn:{" "}
+                      <p className="mb-1">
+                        <FaLinkedin className="me-2 text-primary" /> LinkedIn:{" "}
                         <a href={analysis.contact.linkedin} target="_blank" rel="noopener noreferrer">
                           {analysis.contact.linkedin}
                         </a>
@@ -46,11 +95,15 @@ const Jobs = () => {
 
               {/* Skills */}
               {analysis.skills?.length > 0 && (
-                <Card className="mb-3 shadow-sm">
-                  <Card.Header>Skills</Card.Header>
+                <Card className="mb-4 shadow-lg border-0 rounded-4">
+                  <Card.Header style={{ backgroundColor: "#e3f2fd", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", fontWeight: "bold" }}>
+                    Skills
+                  </Card.Header>
                   <Card.Body>
                     {analysis.skills.map((skill, i) => (
-                      <Badge key={i} bg="info" className="me-1 mb-1">{skill}</Badge>
+                      <Badge key={i} bg="primary" className="me-1 mb-1" style={{ backgroundColor: "#2179f5", color: "white" }}>
+                        {skill}
+                      </Badge>
                     ))}
                   </Card.Body>
                 </Card>
@@ -58,25 +111,29 @@ const Jobs = () => {
 
               {/* Education */}
               {analysis.education && (
-                <Card className="mb-3 shadow-sm">
-                  <Card.Header>Education</Card.Header>
+                <Card className="mb-4 shadow-lg border-0 rounded-4">
+                  <Card.Header style={{ backgroundColor: "#e3f2fd", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", fontWeight: "bold" }}>
+                    Education
+                  </Card.Header>
                   <Card.Body>
-                    <p><FaGraduationCap className="me-2" /> {analysis.education.degree} from {analysis.education.institution}</p>
-                    {analysis.education.graduationYear && <p>Graduation Year: {analysis.education.graduationYear}</p>}
-                    {analysis.education.gpa && <p>GPA: {analysis.education.gpa}</p>}
+                    <p className="mb-1"><FaGraduationCap className="me-2 text-primary" /> {analysis.education.degree} from {analysis.education.institution}</p>
+                    {analysis.education.graduationYear && <p className="mb-1">Graduation Year: {analysis.education.graduationYear}</p>}
+                    {analysis.education.gpa && <p className="mb-1">GPA: {analysis.education.gpa}</p>}
                   </Card.Body>
                 </Card>
               )}
 
               {/* Experience */}
               {analysis.experience?.length > 0 && (
-                <Card className="mb-3 shadow-sm">
-                  <Card.Header>Experience</Card.Header>
+                <Card className="mb-4 shadow-lg border-0 rounded-4">
+                  <Card.Header style={{ backgroundColor: "#e3f2fd", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", fontWeight: "bold" }}>
+                    Experience
+                  </Card.Header>
                   <Card.Body>
                     {analysis.experience.map((exp, i) => (
-                      <div key={i} className="mb-2">
-                        <strong>{exp.position}</strong> at {exp.company} ({exp.duration})
-                        {exp.description && <p>{exp.description}</p>}
+                      <div key={i} className="mb-3">
+                        <strong className="text-primary">{exp.position}</strong> at {exp.company} ({exp.duration})
+                        {exp.description && <p className="mt-1 mb-0">{exp.description}</p>}
                       </div>
                     ))}
                   </Card.Body>
@@ -85,11 +142,13 @@ const Jobs = () => {
 
               {/* Quality Score */}
               {analysis?.qualityScore?.details ? (
-                <Card className="mb-3 shadow-sm">
-                  <Card.Header>📊 Quality Score</Card.Header>
+                <Card className="mb-4 shadow-lg border-0 rounded-4">
+                  <Card.Header style={{ backgroundColor: "#e3f2fd", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", fontWeight: "bold" }}>
+                    📊 Quality Score
+                  </Card.Header>
                   <Card.Body>
-                    <p>Overall Score: <strong>{analysis.qualityScore.overall}/100</strong></p>
-                    <Table striped bordered hover size="sm">
+                    <p className="mb-2">Overall Score: <strong>{analysis.qualityScore.overall}/100</strong></p>
+                    <Table striped bordered hover size="sm" className="rounded-3 overflow-hidden">
                       <thead>
                         <tr>
                           <th>Aspect</th>
@@ -113,8 +172,10 @@ const Jobs = () => {
 
               {/* Improvement Tips */}
               {analysis.improvementTips?.length > 0 && (
-                <Card className="mb-3 shadow-sm">
-                  <Card.Header>📈 Improvement Tips</Card.Header>
+                <Card className="mb-4 shadow-lg border-0 rounded-4">
+                  <Card.Header style={{ backgroundColor: "#e3f2fd", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", fontWeight: "bold" }}>
+                    📈 Improvement Tips
+                  </Card.Header>
                   <Card.Body>
                     {analysis.improvementTips.map((tip, i) => (
                       <div key={i} className="mb-2">
@@ -146,19 +207,30 @@ const Jobs = () => {
                       <FaBriefcase size={36} color="#1976d2" />
                     </div>
                     <Card.Body className="d-flex flex-column">
-                      <Card.Title className="mb-2" style={{ fontWeight: "600", fontSize: "1.2rem" }}>{job.title}</Card.Title>
+                      <Card.Title className="mb-2 text-primary" style={{ fontWeight: "600", fontSize: "1.2rem" }}>{job.title}</Card.Title>
                       {job.location && <div className="mb-2 text-muted d-flex align-items-center"><FaMapMarkerAlt className="me-1" /> {job.location}</div>}
                       {job.education && <div className="mb-2 text-muted d-flex align-items-center"><FaGraduationCap className="me-1" /> {job.education}</div>}
                       <Card.Text className="flex-grow-1">{job.description}</Card.Text>
                       {job.skills?.length > 0 && (
                         <div className="mb-3">
                           {job.skills.map((skill, i) => (
-                            <Badge key={i} bg="info" className="me-1 mb-1" style={{ fontSize: "0.8rem" }}>{skill}</Badge>
+                            <Badge 
+                              key={i} 
+                              className="me-1 mb-1" 
+                              style={{ 
+                                backgroundColor: "#2179f5", 
+                                color: "white", 
+                                fontSize: "0.8rem", 
+                                fontWeight: "normal" 
+                              }}
+                            >
+                              {skill}
+                            </Badge>
                           ))}
                         </div>
                       )}
                       <div className="mt-auto">
-                        <Button variant="primary" className="w-100">Apply Now</Button>
+                        <Button variant="primary" className="w-100" style={{ backgroundColor: "#2179f5", borderColor: "#2179f5" }}>Apply Now</Button>
                       </div>
                     </Card.Body>
                   </Card>
