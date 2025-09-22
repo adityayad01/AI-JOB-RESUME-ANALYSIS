@@ -130,6 +130,8 @@ ${resumeText}
     }
 };
 
+
+
 // ----------------------------
 // Fetch Job Recommendations for Latest Resume
 // ----------------------------
@@ -160,4 +162,31 @@ exports.getResumeAnalysis = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: err.message });
   }
+};
+
+exports.getAllResumes = async (req, res) => {
+    try {
+        const resumes = await Resume.find({ user: req.user._id }).sort({ createdAt: -1 });
+        if (!resumes || resumes.length === 0) {
+            return res.status(200).json([]);
+        }
+        res.json(resumes);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getSingleResume = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resume = await Resume.findById(id);
+        if (!resume || resume.user.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Resume not found or unauthorized." });
+        }
+        res.json(resume);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: err.message });
+    }
 };
