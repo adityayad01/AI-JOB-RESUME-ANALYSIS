@@ -1,183 +1,150 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Alert, Badge } from 'react-bootstrap';
-import axios from 'axios';
-import { API_URL } from '../../utils/constants';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Table, Button, Modal, Form } from "react-bootstrap";
+import { toast } from "react-toastify";
+import { API_URL } from "../../utils/constants"; // ✅ import API_URL
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  
   const [showModal, setShowModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: '',
-    status: ''
-  });
-  
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-  
+  const [editingUser, setEditingUser] = useState(null);
+  const [formData, setFormData] = useState({ name: "", email: "", role: "" });
+
+  // Fetch all users
   const fetchUsers = async () => {
     try {
-      setLoading(true);
-      const res = await axios.get(`${API_URL}/api/users`);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUsers(res.data.data);
+      setLoading(false);
     } catch (err) {
-      setError('Error fetching users');
-      console.error(err);
-    } finally {
+      toast.error("Failed to fetch users");
       setLoading(false);
     }
   };
-  
-  const handleOpenModal = (user) => {
-    setSelectedUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      phone: user.phone || '',
-      role: user.role,
-      status: user.status
-    });
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Open modal for editing
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setFormData({ name: user.name, email: user.email, role: user.role });
     setShowModal(true);
   };
-  
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedUser(null);
-  };
-  
+
+  // Handle form changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+
+  // Update user
+  const handleUpdate = async () => {
     try {
-      await axios.put(`${API_URL}/api/users/${selectedUser._id}`, formData);
-      
-      // Update user in the list
-      setUsers(users.map(user => 
-        user._id === selectedUser._id ? { ...user, ...formData } : user
-      ));
-      
-      toast.success('User updated successfully');
-      handleCloseModal();
-    } catch (err) {
-      toast.error('Error updating user');
-      console.error(err);
-    }
-  };
-  
-  const handleToggleStatus = async (userId, currentStatus) => {
-    try {
-      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      
-      await axios.put(`${API_URL}/api/users/${userId}/status`, {
-        status: newStatus
+      const token = localStorage.getItem("token");
+      await axios.put(`${API_URL}/api/users/${editingUser._id}`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      // Update user in the list
-      setUsers(users.map(user => 
-        user._id === userId ? { ...user, status: newStatus } : user
-      ));
-      
-      toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+      toast.success("User updated successfully");
+      setShowModal(false);
+      fetchUsers();
     } catch (err) {
-      toast.error('Error updating user status');
-      console.error(err);
+      toast.error("Failed to update user");
     }
   };
-  
-  if (loading) {
-    return (
-      <div className="text-center py-5">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <Alert variant="danger">
-        {error}
-      </Alert>
-    );
-  }
-  
+
+  // Delete user
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(`${API_URL}/api/users/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("User deleted successfully");
+        fetchUsers();
+      } catch (err) {
+        toast.error("Failed to delete user");
+      }
+    }
+  };
+
   return (
-    <div>
-      <h1 className="mb-4">User Management</h1>
-      
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user._id}>
-              <td>{user.name}</td>
-              <td>{user.email}</td>
-              <td>{user.phone || 'N/A'}</td>
-              <td>
-                <Badge bg={user.role === 'admin' ? 'danger' : 'primary'}>
-                  {user.role}
-                </Badge>
-              </td>
-              <td>
-                <Badge bg={user.status === 'active' ? 'success' : 'secondary'}>
-                  {user.status}
-                </Badge>
-              </td>
-              <td>
-                <Button 
-                  variant="primary" 
-                  size="sm" 
-                  className="me-2"
-                  onClick={() => handleOpenModal(user)}
-                >
-                  Edit
-                </Button>
-                <Button 
-                  variant={user.status === 'active' ? 'warning' : 'success'} 
-                  size="sm"
-                  onClick={() => handleToggleStatus(user._id, user.status)}
-                >
-                  {user.status === 'active' ? 'Deactivate' : 'Activate'}
-                </Button>
-              </td>
+    <div className="container mt-4">
+      <h2>User Management</h2>
+
+      {loading ? (
+        <p>Loading users...</p>
+      ) : (
+        <Table striped bordered hover responsive className="mt-3">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Joined</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
-      
+          </thead>
+          <tbody>
+            {users.length > 0 ? (
+              users.map((user, index) => (
+                <tr key={user._id}>
+                  <td>{index + 1}</td>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        user.role === "admin" ? "bg-danger" : "bg-primary"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      onClick={() => handleEdit(user)}
+                      className="me-2"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDelete(user._id)}
+                    >
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center">
+                  No users found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
+      )}
+
       {/* Edit User Modal */}
-      <Modal show={showModal} onHide={handleCloseModal}>
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Edit User</Modal.Title>
         </Modal.Header>
-        <Form onSubmit={handleSubmit}>
-          <Modal.Body>
+        <Modal.Body>
+          <Form>
             <Form.Group className="mb-3">
               <Form.Label>Name</Form.Label>
               <Form.Control
@@ -185,10 +152,9 @@ const UserManagement = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                required
               />
             </Form.Group>
-            
+
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -196,59 +162,30 @@ const UserManagement = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                required
-                disabled
-              />
-              <Form.Text className="text-muted">
-                Email cannot be changed
-              </Form.Text>
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control
-                type="text"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
               />
             </Form.Group>
-            
+
             <Form.Group className="mb-3">
               <Form.Label>Role</Form.Label>
               <Form.Select
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                required
               >
-                <option value="user">User</option>
+                <option value="student">Student</option>
                 <option value="admin">Admin</option>
               </Form.Select>
             </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Status</Form.Label>
-              <Form.Select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </Form.Select>
-            </Form.Group>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit">
-              Save Changes
-            </Button>
-          </Modal.Footer>
-        </Form>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleUpdate}>
+            Save Changes
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

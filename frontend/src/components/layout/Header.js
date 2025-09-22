@@ -23,7 +23,7 @@ const SmartHireHeader = () => {
     <>
       <Nav.Link as={Link} to="/upload/resume">Upload Resume</Nav.Link>
       <Nav.Link as={Link} to="/jobs">AI Insights</Nav.Link>
-      <Nav.Link as={Link} to="/insights">My Resumes</Nav.Link>
+      <Nav.Link as={Link} to="/myresumes">My Resumes</Nav.Link>
       <Nav.Link as={Link} to="/matches">My Matches</Nav.Link>
       <Nav.Link as={Link} to="/mock-interview">Mock Interview</Nav.Link>
     </>

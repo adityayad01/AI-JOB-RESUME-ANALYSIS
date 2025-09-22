@@ -18,14 +18,13 @@ import Register from './components/auth/Register';
 import Profile from './components/auth/Profile';
 
 // Item Components
-import UploadResume from './components/items/UploadResume';
-import Jobs from './components/items/Jobs';
-import MockInterviewBot from "./components/items/MockInterviewBot"; // adjust path if different
+import UploadResume from './components/Resume/UploadResume';
+import Jobs from './components/Resume/Jobs';
+import MyResumes from './components/Resume/MyResumes';
 
-// Claim Components
-import Claims from './components/claims/Claims';
+import MockInterviewBot from "./components/Resume/MockInterviewBot"; // adjust path if different
 
-import ClaimDetail from './components/claims/ClaimDetail';
+
 
 // Notification Components
 import Notifications from './components/notifications/Notifications';
@@ -33,8 +32,7 @@ import Notifications from './components/notifications/Notifications';
 // Admin Components
 import Dashboard from './components/admin/Dashboard';
 import UserManagement from './components/admin/UserManagement';
-import ItemManagement from './components/admin/ItemManagement';
-import ClaimManagement from './components/admin/ClaimManagement';
+
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -57,17 +55,18 @@ function App() {
                 {/* Private Routes */}
                 <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
                 <Route path="/upload/resume" element={<PrivateRoute><UploadResume /></PrivateRoute>} />
+                <Route path="/ai-insights/:resumeId" element={<PrivateRoute><Jobs /></PrivateRoute>} />
                 <Route path="/jobs" element={<PrivateRoute><Jobs /></PrivateRoute>} />
+
+                <Route path="/myresumes" element={<PrivateRoute><MyResumes /></PrivateRoute>} />
                 <Route path="/mock-interview" element={<PrivateRoute><MockInterviewBot /> </PrivateRoute>} />
                 
-                <Route path="/claims" element={<PrivateRoute><Claims /></PrivateRoute>} />                <Route path="/claims/:id" element={<PrivateRoute><ClaimDetail /></PrivateRoute>} />
                 <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
  
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
                 <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
-                <Route path="/admin/items" element={<AdminRoute><ItemManagement /></AdminRoute>} />
-                <Route path="/admin/claims" element={<AdminRoute><ClaimManagement /></AdminRoute>} />
+
               </Routes>
             </div>
           </main>
