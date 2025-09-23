@@ -190,3 +190,27 @@ exports.getSingleResume = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+// Add this function to your controller file (e.g., controllers/resumeController.js)
+exports.downloadResume = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resume = await Resume.findById(id);
+
+        if (!resume || resume.user.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Resume not found or unauthorized." });
+        }
+
+        // Check if the file path exists and the file is still there
+        if (!fs.existsSync(resume.filePath)) {
+            return res.status(404).json({ message: "File not found on server." });
+        }
+
+        // Send the file to the client for download
+        res.download(resume.filePath, resume.originalFileName);
+
+    } catch (err) {
+        console.error("Download error:", err);
+        res.status(500).json({ message: "Error downloading file." });
+    }
+};

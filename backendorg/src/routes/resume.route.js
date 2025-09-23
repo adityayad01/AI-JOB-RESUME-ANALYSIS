@@ -6,7 +6,8 @@ const {
     getJobRecommendations, 
     getResumeAnalysis,
     getAllResumes,
-    getSingleResume
+    getSingleResume,
+    downloadResume
 } = require('../controllers/resume.controller');
 const { protect } = require('../middleware/auth');
 
@@ -20,7 +21,7 @@ router.get('/recommendations', protect, getJobRecommendations);
 router.get('/analysis', protect, getResumeAnalysis);
 router.get("/all", protect, getAllResumes); // New route to get a list of all resumes
 router.get("/:id", protect, getSingleResume); 
-
+router.get("/:id/download", protect, downloadResume); // New route to download a specific resume by its ID
 // GET /api/resume/test
 router.get('/test', (req, res) => {
     res.send('Resume route working ✅');

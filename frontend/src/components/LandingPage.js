@@ -22,7 +22,7 @@ const LandingPage = () => {
               </p>
               <div className="d-flex gap-3">
                 {isAuthenticated ? (
-                  <Link to="/upload-resume">
+                  <Link to="/upload/resume">
                     <Button variant="light" size="lg">Upload Resume</Button>
                   </Link>
                 ) : (
